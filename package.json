@@ -1,0 +1,14 @@
+{
+  "name": "scanner-test-fixture",
+  "version": "1.0.0",
+  "description": "Intentionally vulnerable dependencies for scanner validation. Do not use in production.",
+  "private": true,
+  "dependencies": {
+    "lodash": "4.17.4",
+    "minimist": "0.0.8",
+    "axios": "0.18.0",
+    "express": "4.15.2",
+    "jquery": "2.2.4",
+    "handlebars": "4.0.5"
+  }
+}

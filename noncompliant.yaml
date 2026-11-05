@@ -1,0 +1,62 @@
+# Namespace + Pod cố tình vi phạm hàng loạt control của
+# CIS Kubernetes Benchmark, NSA/CISA Hardening Guidance, và
+# Pod Security Standards (Baseline + Restricted).
+#
+# Không NetworkPolicy nào được tạo trong namespace này - đây cũng
+# là 1 vi phạm cố ý (NSA hardening yêu cầu network segmentation).
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: noncompliant-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: noncompliant-pod
+  namespace: noncompliant-test
+  labels:
+    app: noncompliant
+spec:
+  # Vi phạm CIS 5.2.4 / PSS Baseline: dùng chung network/PID/IPC namespace với host
+  hostNetwork: true
+  hostPID: true
+  hostIPC: true
+  # Vi phạm CIS (service account token tự mount khi không cần)
+  automountServiceAccountToken: true
+  containers:
+    - name: noncompliant-container
+      # Vi phạm best practice: dùng tag "latest", không pin version
+      image: nginx:latest
+      securityContext:
+        # Vi phạm CIS 5.2.1 / PSS Baseline+Restricted: container chạy privileged
+        privileged: true
+        # Vi phạm PSS Restricted: cho phép leo quyền
+        allowPrivilegeEscalation: true
+        # Vi phạm PSS Restricted: chạy bằng root (UID 0), không có runAsNonRoot
+        runAsUser: 0
+        # Vi phạm PSS Restricted: rootfs không readonly
+        readOnlyRootFilesystem: false
+        # Vi phạm CIS 5.2.8/5.2.9 / PSS Baseline+Restricted: thêm capability nguy hiểm
+        capabilities:
+          add:
+            - SYS_ADMIN
+            - NET_ADMIN
+      ports:
+        - containerPort: 80
+          # Vi phạm PSS Baseline: dùng hostPort
+          hostPort: 80
+      volumeMounts:
+        # Vi phạm CIS 5.2.12 / PSS Baseline: mount hostPath nhạy cảm (toàn bộ root fs host)
+        - name: host-root
+          mountPath: /host
+      env:
+        # Vi phạm hygiene: secret dạng plaintext trong env var thay vì Secret object
+        - name: DB_PASSWORD
+          value: "supersecretpassword123"
+      # Thiếu hẳn resources.requests/limits -> vi phạm khuyến nghị NSA hardening
+  volumes:
+    - name: host-root
+      hostPath:
+        path: /
+        type: Directory
