@@ -8,3 +8,28 @@ requests==2.19.1
 urllib3==1.24.1
 Pillow==5.2.0
 Jinja2==2.10
+
+# --- Added: more vulnerable packages, standard "==" pins (Trivy should detect) ---
+Werkzeug==0.14.1        # Flask dependency, must be listed explicitly - CVE-2019-14806, CVE-2023-25577
+paramiko==2.4.1         # SSH server auth bypass - CVE-2018-1000805
+cryptography==3.2       # bundled OpenSSL - CVE-2023-0286, CVE-2020-36242
+SQLAlchemy==1.2.17      # SQL injection via order_by/group_by - CVE-2019-7164, CVE-2019-7548
+PyJWT==1.7.1            # algorithm confusion - CVE-2022-29217
+lxml==4.6.2             # CVE-2021-43818, CVE-2022-2309
+GitPython==3.1.29       # RCE - CVE-2022-24439
+setuptools==65.5.0      # CVE-2022-40897, CVE-2024-6345
+aiohttp==3.8.1          # path traversal - CVE-2024-23334
+gunicorn==19.4.0        # HTTP request smuggling - CVE-2024-1135
+pycrypto==2.6.1         # abandoned, NO fixed version exists - CVE-2013-7459
+
+# --- Other requirement syntaxes Trivy still parses ---
+celery[redis]==4.4.0                    # extras - CVE-2021-23727
+ujson==1.35 ; python_version >= "3.6"   # environment marker - CVE-2021-45958
+python_multipart==0.0.5                 # non-canonical name (underscore) - CVE-2024-24762
+# hash + line continuation - CVE-2020-10108, CVE-2020-10109
+Twisted==18.9.0 \
+    --hash=sha256:294be2c6bf84ae776df2fc98e7af7d6537e1c5e60a46d33c3ce2a197677da395
+
+# --- Expected FALSE NEGATIVES: not pinned with "==", Trivy cannot know the version ---
+Pygments>=2.5,<2.7      # pip resolves to 2.6.1, still vulnerable - CVE-2021-27291
+Mako~=1.0.7             # pip resolves to 1.0.14, still vulnerable - CVE-2022-40023
